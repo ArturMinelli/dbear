@@ -67,4 +67,5 @@ func init() {
 	rootCmd.AddCommand(connectionsCmd)
 	connectionsCmd.AddCommand(connectionsCreateCmd)
 	connectionsCmd.AddCommand(connectionsListCmd)
+	connectionsCmd.AddCommand(importCmd)
 }
