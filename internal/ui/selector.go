@@ -40,6 +40,7 @@ type selectorModel struct {
 	list     list.Model
 	choice   string
 	quitting bool
+	title    string
 }
 
 func (m selectorModel) Init() tea.Cmd {
@@ -74,10 +75,18 @@ func (m selectorModel) View() string {
 	if m.quitting {
 		return ""
 	}
-	return "\n" + titleStyle.Render("Select a connection") + "\n" + m.list.View()
+	displayTitle := "Select a connection"
+	if m.title != "" {
+		displayTitle = m.title
+	}
+	return "\n" + titleStyle.Render(displayTitle) + "\n" + m.list.View()
 }
 
 func SelectConnection(connections []config.Connection) (string, error) {
+	return SelectConnectionWithTitle(connections, "Select a connection")
+}
+
+func SelectConnectionWithTitle(connections []config.Connection, title string) (string, error) {
 	if len(connections) == 0 {
 		return "", fmt.Errorf("no connections available")
 	}
@@ -93,7 +102,7 @@ func SelectConnection(connections []config.Connection) (string, error) {
 	l.SetFilteringEnabled(true)
 	l.Styles.Title = titleStyle
 
-	m := selectorModel{list: l}
+	m := selectorModel{list: l, title: title}
 	p := tea.NewProgram(m)
 
 	finalModel, err := p.Run()
