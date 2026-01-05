@@ -1,6 +1,10 @@
 package connection
 
-import "dbear/internal/config"
+import (
+	"sort"
+
+	"dbear/internal/config"
+)
 
 type Manager struct {
 	configManager config.Manager
@@ -18,13 +22,19 @@ func (m *Manager) Create(conn config.Connection) error {
 		return err
 	}
 
-	for _, existing := range cfg.Connections {
+	found := false
+	for i, existing := range cfg.Connections {
 		if existing.Name == conn.Name {
-			return nil
+			cfg.Connections[i] = conn
+			found = true
+			break
 		}
 	}
 
-	cfg.Connections = append(cfg.Connections, conn)
+	if !found {
+		cfg.Connections = append(cfg.Connections, conn)
+	}
+
 	return m.configManager.Save(cfg)
 }
 
@@ -34,7 +44,12 @@ func (m *Manager) List() ([]config.Connection, error) {
 		return nil, err
 	}
 
-	return cfg.Connections, nil
+	connections := cfg.Connections
+	sort.Slice(connections, func(i, j int) bool {
+		return connections[i].Name < connections[j].Name
+	})
+
+	return connections, nil
 }
 
 func (m *Manager) Get(name string) (*config.Connection, error) {
