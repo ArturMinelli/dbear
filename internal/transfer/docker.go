@@ -71,7 +71,7 @@ func buildPostgreSQLDumpCommand(conn config.Connection, dockerImage string) *exe
 		args = append(args, "-e", e)
 	}
 
-	args = append(args, dockerImage, "pg_dump", "--no-owner", "--no-acl")
+	args = append(args, dockerImage, "pg_dump", "--no-owner", "--no-acl", "-Fc")
 
 	return exec.Command("docker", args...)
 }
@@ -96,7 +96,7 @@ func buildPostgreSQLRestoreCommand(conn config.Connection, dockerImage string, d
 		args = append(args, "-e", e)
 	}
 
-	args = append(args, dockerImage, "psql", "--quiet")
+	args = append(args, dockerImage, "pg_restore", "--no-owner", "--no-acl", "--disable-triggers", "-d", conn.Database)
 
 	cmd := exec.Command("docker", args...)
 	cmd.Stdin = bytes.NewReader(dumpData)
