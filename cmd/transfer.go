@@ -15,6 +15,7 @@ var transferCmd = &cobra.Command{
 	Short: "Transfer data between databases",
 	Long:  "Transfer data from a source database to a destination database using Docker containers or native tools",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("Loading connections...")
 		manager := connection.NewManager(configManager)
 
 		connections, err := manager.List()
@@ -84,7 +85,10 @@ var transferCmd = &cobra.Command{
 			return fmt.Errorf("transfer cancelled by user")
 		}
 
-		if err := transfer.Transfer(*sourceConn, *destConn); err != nil {
+		_, err = ui.RunWithSpinner("Transferring data...", func() (interface{}, error) {
+			return nil, transfer.Transfer(*sourceConn, *destConn)
+		})
+		if err != nil {
 			return fmt.Errorf("transfer failed: %w", err)
 		}
 

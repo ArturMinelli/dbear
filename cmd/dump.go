@@ -19,6 +19,7 @@ var dumpCmd = &cobra.Command{
 	Short: "Dump a database to a file",
 	Long:  "Dump the selected source database to a file. Uses Docker for PostgreSQL/MySQL and native sqlite3 for SQLite.",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("Loading connections...")
 		manager := connection.NewManager(configManager)
 
 		connections, err := manager.List()
@@ -51,11 +52,15 @@ var dumpCmd = &cobra.Command{
 			outputPath = fmt.Sprintf("dump_%s_%s%s", sourceName, timestamp, extension)
 		}
 
-		dumpData, err := transfer.Dump(*sourceConn)
+		result, err := ui.RunWithSpinner("Dumping database...", func() (interface{}, error) {
+			return transfer.Dump(*sourceConn)
+		})
 		if err != nil {
 			return fmt.Errorf("dump failed: %w", err)
 		}
 
+		dumpData := result.([]byte)
+		fmt.Println("Writing file...")
 		if err := os.WriteFile(outputPath, dumpData, 0600); err != nil {
 			return fmt.Errorf("failed to write dump file: %w", err)
 		}
