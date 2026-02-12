@@ -8,11 +8,11 @@ import (
 	"dbear/internal/config"
 )
 
-func DumpDatabase(conn config.Connection, dockerImage string) ([]byte, error) {
+func DumpDatabase(conn config.Connection, dockerImage string, schemas []string) ([]byte, error) {
 	var dumpCmd *exec.Cmd
 
 	if conn.Type == config.TypePostgreSQL {
-		dumpCmd = buildPostgreSQLDumpCommand(conn, dockerImage)
+		dumpCmd = buildPostgreSQLDumpCommand(conn, dockerImage, schemas)
 	} else if conn.Type == config.TypeMySQL {
 		dumpCmd = buildMySQLDumpCommand(conn, dockerImage)
 	} else {
@@ -52,7 +52,7 @@ func RestoreDatabase(conn config.Connection, dockerImage string, dumpData []byte
 	return nil
 }
 
-func buildPostgreSQLDumpCommand(conn config.Connection, dockerImage string) *exec.Cmd {
+func buildPostgreSQLDumpCommand(conn config.Connection, dockerImage string, schemas []string) *exec.Cmd {
 	env := []string{
 		fmt.Sprintf("PGHOST=%s", conn.Host),
 		fmt.Sprintf("PGPORT=%d", conn.Port),
@@ -67,11 +67,16 @@ func buildPostgreSQLDumpCommand(conn config.Connection, dockerImage string) *exe
 		"--network", "host",
 	}
 
-	for _, e := range env {
-		args = append(args, "-e", e)
+	for _, envVar := range env {
+		args = append(args, "-e", envVar)
 	}
 
 	args = append(args, dockerImage, "pg_dump", "--no-owner", "--no-acl", "-Fc")
+	if len(schemas) > 0 {
+		for _, schema := range schemas {
+			args = append(args, "-n", schema)
+		}
+	}
 
 	return exec.Command("docker", args...)
 }

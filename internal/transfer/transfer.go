@@ -6,14 +6,14 @@ import (
 	"dbear/internal/config"
 )
 
-func Transfer(source, dest config.Connection) error {
+func Transfer(source, dest config.Connection, schemas []string) error {
 	if source.Type != dest.Type {
 		return fmt.Errorf("source and destination databases must be of the same type")
 	}
 
 	switch source.Type {
 	case config.TypePostgreSQL, config.TypeMySQL:
-		return transferWithDocker(source, dest)
+		return transferWithDocker(source, dest, schemas)
 	case config.TypeSQLite:
 		return transferSQLite(source, dest)
 	default:
@@ -21,7 +21,7 @@ func Transfer(source, dest config.Connection) error {
 	}
 }
 
-func transferWithDocker(source, dest config.Connection) error {
+func transferWithDocker(source, dest config.Connection, schemas []string) error {
 	sourceVersion, err := DetectVersion(source)
 	if err != nil {
 		return fmt.Errorf("failed to detect source version: %w", err)
@@ -42,7 +42,7 @@ func transferWithDocker(source, dest config.Connection) error {
 		return fmt.Errorf("failed to determine docker image for destination database")
 	}
 
-	dumpData, err := DumpDatabase(source, sourceImage)
+	dumpData, err := DumpDatabase(source, sourceImage, schemas)
 	if err != nil {
 		return fmt.Errorf("failed to dump source database: %w", err)
 	}

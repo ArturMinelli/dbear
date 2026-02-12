@@ -13,6 +13,7 @@ import (
 )
 
 var dumpOutputPath string
+var dumpSchemas string
 
 var dumpCmd = &cobra.Command{
 	Use:   "dump",
@@ -52,8 +53,9 @@ var dumpCmd = &cobra.Command{
 			outputPath = fmt.Sprintf("dump_%s_%s%s", sourceName, timestamp, extension)
 		}
 
+		schemas := parseCommaSeparatedSchemas(dumpSchemas)
 		result, err := ui.RunWithSpinner("Dumping database...", func() (interface{}, error) {
-			return transfer.Dump(*sourceConn)
+			return transfer.Dump(*sourceConn, schemas)
 		})
 		if err != nil {
 			return fmt.Errorf("dump failed: %w", err)
@@ -72,5 +74,6 @@ var dumpCmd = &cobra.Command{
 
 func init() {
 	dumpCmd.Flags().StringVarP(&dumpOutputPath, "output", "o", "", "output file path (default: dump_<connection>_<timestamp>.<ext>)")
+	dumpCmd.Flags().StringVarP(&dumpSchemas, "schemas", "s", "", "comma-separated list of schemas to include (default: all). PostgreSQL only.")
 	rootCmd.AddCommand(dumpCmd)
 }

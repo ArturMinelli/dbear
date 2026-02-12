@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var transferSchemas string
+
 var transferCmd = &cobra.Command{
 	Use:   "transfer",
 	Short: "Transfer data between databases",
@@ -85,8 +87,9 @@ var transferCmd = &cobra.Command{
 			return fmt.Errorf("transfer cancelled by user")
 		}
 
+		schemas := parseCommaSeparatedSchemas(transferSchemas)
 		_, err = ui.RunWithSpinner("Transferring data...", func() (interface{}, error) {
-			return nil, transfer.Transfer(*sourceConn, *destConn)
+			return nil, transfer.Transfer(*sourceConn, *destConn, schemas)
 		})
 		if err != nil {
 			return fmt.Errorf("transfer failed: %w", err)
@@ -98,6 +101,7 @@ var transferCmd = &cobra.Command{
 }
 
 func init() {
+	transferCmd.Flags().StringVarP(&transferSchemas, "schemas", "s", "", "comma-separated list of schemas to include (default: all). PostgreSQL only.")
 	rootCmd.AddCommand(transferCmd)
 }
 

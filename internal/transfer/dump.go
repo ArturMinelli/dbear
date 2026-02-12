@@ -6,10 +6,10 @@ import (
 	"dbear/internal/config"
 )
 
-func Dump(conn config.Connection) ([]byte, error) {
+func Dump(conn config.Connection, schemas []string) ([]byte, error) {
 	switch conn.Type {
 	case config.TypePostgreSQL, config.TypeMySQL:
-		return dumpWithDocker(conn)
+		return dumpWithDocker(conn, schemas)
 	case config.TypeSQLite:
 		return DumpSQLite(conn)
 	default:
@@ -17,7 +17,7 @@ func Dump(conn config.Connection) ([]byte, error) {
 	}
 }
 
-func dumpWithDocker(conn config.Connection) ([]byte, error) {
+func dumpWithDocker(conn config.Connection, schemas []string) ([]byte, error) {
 	version, err := DetectVersion(conn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to detect database version: %w", err)
@@ -28,7 +28,7 @@ func dumpWithDocker(conn config.Connection) ([]byte, error) {
 		return nil, fmt.Errorf("failed to determine docker image for database")
 	}
 
-	return DumpDatabase(conn, image)
+	return DumpDatabase(conn, image, schemas)
 }
 
 func DumpFileExtension(connType string) string {
