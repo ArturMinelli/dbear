@@ -64,6 +64,10 @@ var transferCmd = &cobra.Command{
 			return fmt.Errorf("destination connection '%s' not found", destName)
 		}
 
+		if err := transfer.ValidateDestination(*destConn); err != nil {
+			return err
+		}
+
 		if sourceConn.Type != destConn.Type {
 			return fmt.Errorf("source and destination databases must be of the same type (source: %s, destination: %s)", sourceConn.Type, destConn.Type)
 		}

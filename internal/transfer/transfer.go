@@ -7,6 +7,10 @@ import (
 )
 
 func Transfer(source, dest config.Connection, schemas []string) error {
+	if err := ValidateDestination(dest); err != nil {
+		return err
+	}
+
 	if source.Type != dest.Type {
 		return fmt.Errorf("source and destination databases must be of the same type")
 	}
